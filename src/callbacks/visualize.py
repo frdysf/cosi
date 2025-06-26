@@ -34,12 +34,19 @@ class VisualizeLatents(Callback):
         embeddings = torch.vstack(self.embeddings).cpu().numpy()
         print(embeddings.shape)  # DEBUG
 
-        # aggregate (across arbitrary number of) labels
-        # labels = torch.dstack(
-        #     [torch.vstack(label) for label in self.labels]
-        # ).flatten(1,2).cpu().numpy()
+        # aggregate labels across batches
+        # for arbitrary number of labels
+        aggregated_labels = {}
+        for d in self.labels:
+            for label, arr in d.items():
+                if label not in aggregated_labels:
+                    aggregated_labels[label] = []
+                aggregated_labels[label].append(arr)
 
-        print(self.labels)  # DEBUG
+        labels = {key: torch.hstack(value).cpu().numpy() for key, value in aggregated_labels.items()}
+
+        for key, value in labels.items():  # DEBUG
+            print(f"{key}: {value.shape}")
 
         # transformed_embeddings = viz.transform(
         #     embeddings,
