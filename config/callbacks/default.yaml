@@ -3,4 +3,16 @@
   monitor: val/total
   mode: min
 
+# TODO: nest transform config?
+# e.g. transform: tsne
+# callbacks/transform/tsne.yaml
 - _target_: callbacks.visualize.VisualizeLatents
+  transform:
+      _target_: sklearn.manifold.TSNE
+      n_components: ${n_components}
+      random_state: ${seed}
+  n_components: ${n_components}
+  show: False
+  save_path:
+  fig_kw: {}
+  ax_kw: {}

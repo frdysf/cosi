@@ -2,6 +2,7 @@ seed: 13
 device: cuda
 sr: 44100  # target sample rate
 dur_samples: ${pow:2,15}
+n_components: 2
 
 # TODO:
 # create log root dir for experiment
