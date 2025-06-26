@@ -1,0 +1,6 @@
+- _target_: lightning.pytorch.callbacks.ModelCheckpoint
+  dirpath: ${dir_checkpoints}
+  monitor: val/total
+  mode: min
+
+- _target_: callbacks.visualize.VisualizeLatents

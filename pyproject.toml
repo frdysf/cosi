@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cosi"
+version = "0.1.0"
+description = ""
+authors = [
+    { name="Farida Yusuf", email="f.yusuf@qmul.ac.uk" }
+]
+dependencies = [
+    "torch",
+    "pytorch-lightning",
+    "torchaudio",
+    "wandb",
+    "hydra-core"
+]
+
+[project.urls]
+# TODO: add URLs (e.g. GitHub, research page, prperint/publication)
+
+[project.scripts]
+train = "cosi.cli:train"
+eval = "cosi.cli:eval"
+
+[tool.setuptools.packages.find]
+where = ["src"]

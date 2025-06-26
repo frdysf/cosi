@@ -1,0 +1,4 @@
+- _target_: utils.audio.Normalize
+- _target_: utils.audio.EqualizeDuration
+  sr: ${sr}
+  dur_samples: ${dur_samples}

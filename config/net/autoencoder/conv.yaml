@@ -1,0 +1,4 @@
+_target_: models.nets.autoencoders.conv.ConvAutoencoder
+latent_dim: 16
+activation_fn:
+  _target_: torch.nn.ReLU

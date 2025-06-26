@@ -1,0 +1,10 @@
+_target_: features.scattering.JTFS
+_partial_: True
+J: 12
+Q: ${as_tuple:12,1}
+J_fr: 5
+Q_fr: 1
+F: 2
+T:  # None, 256 in Mathworks example
+format: joint
+time_avg: False

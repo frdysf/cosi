@@ -1,0 +1,11 @@
+**/__pycache__/
+*.egg-info
+*.ipynb
+*.code-workspace
+
+zzz_recycle/
+wandb/
+outputs/
+
+src/losses
+src/checkpoints
