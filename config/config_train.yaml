@@ -1,18 +1,32 @@
+debug: False  # TODO: route logs to logs/debug if true
 seed: 13
-device: cuda
-sr: 44100  # target sample rate
-dur_samples: ${pow:2,15}
-n_components: 2
 
-# TODO:
-# create log root dir for experiment
-# create subdirs for wandb, hydra, checkpoints, img
+audio:
+  sr: 44100  # target sample rate
+  dur_samples: ${pow:2,15}
 
-wandb_save_dir: ${oc.env:HOME}/cosi/
-wandb_project: cosi
-wandb_run: dev-run
+project_dir: ${oc.env:HOME}/cosi
+log_dir: 
+  "${project_dir}/logs/${hydra:job.name}/\
+  ${hydra:runtime.choices.features}_\
+  ${hydra:runtime.choices.model}/\
+  ${get_basename:${hydra:runtime.choices.net}}/\
+  ${hydra:runtime.choices.datamodule}/\
+  ${now:%Y-%m-%d_%H-%M-%S}"
+checkpoints_dir: ${log_dir}/checkpoints
+outputs_dir: ${log_dir}/outputs
 
-dir_checkpoints: ${oc.env:HOME}/cosi/src/checkpoints
+hydra:
+  run:
+    dir: ${log_dir}
+  output_subdir: hydra
+  sweep:
+    dir: ${log_dir}/sweeps
+    
+wandb:
+  save_dir: ${log_dir}
+  project: cosi
+  run: pilot
 
 defaults:
   - features: jtfs
@@ -26,8 +40,8 @@ defaults:
   - _self_
 
 features:
-  sr: ${sr}
-  device: ${device}
+  sr: ${audio.sr}
+  device: cuda
 
 datamodule:
   batch_size: 32
@@ -37,13 +51,16 @@ datamodule:
   # collate_fn:
 
 net:
-  sr: ${sr}
+  sr: ${audio.sr}
 
 model:
   loss_fn:
     _target_: torch.nn.MSELoss
   loss_weights:
     recon: 1.0
+
+visualize:
+  n_components: 2
 
 # trainer:
 #   _target_: lightning.pytorch.Trainer

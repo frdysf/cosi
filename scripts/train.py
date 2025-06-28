@@ -6,6 +6,7 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 
 import logging
+from pathlib import Path
 
 import os
 os.environ["HYDRA_FULL_ERROR"] = "1"  # DEBUG
@@ -13,6 +14,7 @@ os.environ["HYDRA_FULL_ERROR"] = "1"  # DEBUG
 
 OmegaConf.register_new_resolver('pow', lambda x,y: x**y)
 OmegaConf.register_new_resolver('as_tuple', lambda *args: tuple(args))
+OmegaConf.register_new_resolver('get_basename', lambda path: Path(path).stem)
 
 HYDRA_MAIN = {
     "version_base": "1.2",
@@ -29,10 +31,10 @@ def main(cfg: DictConfig) -> None:
     if cfg.seed:
         pl.seed_everything(cfg.seed, workers=True)
 
-    device = cfg.device
+    device = cfg.features.device
     if device == "cuda":
         assert torch.cuda.is_available()
-    logging.info(f"Using device: {device}")
+    logging.info(f"Extracting features on device: {device}")
 
     logging.info("Building the training pipeline...")
 
@@ -49,7 +51,7 @@ def main(cfg: DictConfig) -> None:
     datamodule = instantiate(cfg.datamodule,
                              transform=transform,
                              feature_extractor=feature_extractor,
-                             target_rate=cfg.sr,
+                             target_rate=cfg.audio.sr,
                              )
     datamodule.setup()
     datamodule.setup_feature_extractor()
@@ -65,8 +67,8 @@ def main(cfg: DictConfig) -> None:
     
     audio = datamodule.train_dataset[1]["audio"]
     resampled_audio = datamodule.resample(audio)
-    logging.info(f"Audio duration in samples: {cfg.dur_samples}")
-    logging.info(f"Resampling to {cfg.sr} Hz")
+    logging.info(f"Audio duration in samples: {cfg.audio.dur_samples}")
+    logging.info(f"Resampling to {cfg.audio.sr} Hz")
     logging.info(f"Resampled audio shape: {resampled_audio.shape}")
     feature_shape = dummy_feature_extractor(resampled_audio).shape    
 
@@ -107,10 +109,8 @@ def main(cfg: DictConfig) -> None:
         fast_dev_run=4,  # True
         # overfit_batches=1.0,
         strategy="ddp",
-        default_root_dir=cfg.dir_checkpoints,
+        default_root_dir=cfg.checkpoints_dir,
     )
-
-    # TODO: early stopping callback
 
     trainer.fit(
         model=model,

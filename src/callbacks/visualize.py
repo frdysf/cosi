@@ -1,5 +1,6 @@
 from lightning.pytorch.callbacks import Callback
 import torch
+import wandb
 import viz
 
 from sklearn.decomposition import PCA
@@ -52,10 +53,7 @@ class VisualizeLatents(Callback):
     def on_validation_epoch_end(self, trainer, pl_module):
         # TODO: offload to async thread on CPU?
 
-        embeddings = torch.vstack(self.embeddings).cpu().numpy()
-
         # aggregate labels across batches
-        # for arbitrary number of labels
         aggregated_labels = {}
         for d in self.labels:
             for name, arr in d.items():
@@ -65,6 +63,8 @@ class VisualizeLatents(Callback):
 
         labels = {name: torch.hstack(arr).cpu().numpy() 
                     for name, arr in aggregated_labels.items()}
+
+        embeddings = torch.vstack(self.embeddings).cpu().numpy()
 
         transformed_embeddings = viz.transform(
             embeddings,
@@ -77,7 +77,6 @@ class VisualizeLatents(Callback):
         except AttributeError:
             transform = str(self.transform)
         epoch = trainer.current_epoch
-        
         for name in labels.keys():
             fig = viz.plot(
                 transformed_embeddings,
@@ -87,23 +86,23 @@ class VisualizeLatents(Callback):
                 save_path=self.save_path/f"{transform}_epoch={epoch}_label={name}.png",
                 fig_kw=self.fig_kw,
                 ax_kw=self.ax_kw,
-                ax_title=f"{name}",
+                ax_title=f"label={name}, epoch={epoch}, transform={transform}",
             )
 
-            # TODO: log plot for each label
-            # wandb.log({name: fig}) # converts to Plotly
-            # wandb.log({name: wandb.Image(fig)}) # converts to static image
+            # wandb.log({"key": fig}) # converts to Plotly
+            # wandb.log({"key": wandb.Image(fig)}, grouping=epoch) # converts to static image
 
-            # see example from website
-            # trainer.logger.experiment.log(
-            #     {"samples": [wandb.Image(img, caption=caption) for (img, caption) in my_images]},
-            #     step=current_trainer_global_step,
-            # )
+            trainer.logger.experiment.log(
+                {"latent/{name}": wandb.Image(fig)},
+                step=epoch,
+            )
 
         self.embeddings.clear()
         self.labels.clear()
 
     def on_train_end(self, trainer, pl_module):
-        # TODO: create GIF from saved images
-        # TODO: save final model checkpoint?
+        # TODO: create and organised saved images into
+        # subfolders according to labels
+        # (unique values for label=r'label=(.+)' in path)
+        # TODO: create GIF from saved images in each subfolder
         return

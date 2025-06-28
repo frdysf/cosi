@@ -1,18 +1,22 @@
 - _target_: lightning.pytorch.callbacks.ModelCheckpoint
-  dirpath: ${dir_checkpoints}
+  dirpath: ${checkpoints_dir}
+  monitor: val/total
+  mode: min
+
+- _target_: lightning.pytorch.callbacks.EarlyStopping
   monitor: val/total
   mode: min
 
 # TODO: nest transform config?
-# e.g. transform: tsne
-# callbacks/transform/tsne.yaml
+#   e.g. transform: tsne
+#   callbacks/transform/tsne.yaml
 - _target_: callbacks.visualize.VisualizeLatents
   transform:
       _target_: sklearn.manifold.TSNE
-      n_components: ${n_components}
+      n_components: ${visualize.n_components}
       random_state: ${seed}
-  n_components: ${n_components}
+  n_components: ${visualize.n_components}
   show: False
-  save_path:
+  save_path: ${outputs_dir}
   fig_kw: {}
   ax_kw: {}

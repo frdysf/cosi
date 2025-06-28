@@ -1,5 +1,5 @@
 _target_: lightning.pytorch.loggers.WandbLogger
-save_dir: ${wandb_save_dir}
-project: ${wandb_project}
-name: ${wandb_run}
+save_dir: ${wandb.save_dir}
+project: ${wandb.project}
+name: ${wandb.run}
 log_model: True
