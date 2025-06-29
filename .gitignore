@@ -3,9 +3,10 @@
 *.ipynb
 *.code-workspace
 
-zzz_recycle/
-wandb/
+logs/
 outputs/
+wandb/
+zzz_recycle/
 
 src/losses
 src/checkpoints
