@@ -74,9 +74,6 @@ def main(cfg: DictConfig) -> None:
     
     audio = datamodule.train_dataset[1]["audio"]
     resampled_audio = datamodule.resample(audio)
-    logging.info(f"Audio duration in samples: {cfg.audio.dur_samples}")
-    logging.info(f"Resampling to {cfg.audio.sr} Hz")
-    logging.info(f"Resampled audio shape: {resampled_audio.shape}")
     feature_shape = dummy_feature_extractor(resampled_audio).shape    
 
     # --- net ---
