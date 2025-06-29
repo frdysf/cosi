@@ -1,3 +1,4 @@
+import torch
 from torch.utils.data import DataLoader
 from torch.nn import Identity
 from torchaudio.transforms import Resample
@@ -32,10 +33,6 @@ class AudioDataModule(L.LightningDataModule):
         feature_extractor: Optional[AudioFeatureExtractor] = None,
     ):
         super().__init__()
-
-        warn(
-            "feature_extractor is assumed to be CUDA-enabled."
-        )
 
         if feature_extractor is None:
             feature_extractor = Identity()  # pass audio through
@@ -100,6 +97,10 @@ class AudioDataModule(L.LightningDataModule):
                 "feature_extractor is not a partial instantiation. "
                 "Ignorning call to setup_feature_extractor()."
                 )
+
+        if self.feature_extractor is not Identity:
+            assert self.feature_extractor.device == torch.device("cuda"), \
+                "feature_extractor must be CUDA-enabled."
 
     def on_after_batch_transfer(self, batch, dataloader_idx):
         batch["audio"] = self.resample(batch["audio"])
