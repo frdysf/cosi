@@ -48,8 +48,6 @@ def main(cfg: DictConfig) -> None:
     # --- features ---
     feature_extractor = instantiate(cfg.features)
     
-    logging.info(f"Instantiated feature extractor: {feature_extractor.__class__.__name__}")
-
     # --- transform ---
     transform = instantiate(cfg.transform)
     logging.info(f"Instantiated transforms: {[t.__class__.__name__ for t in transform]}")
@@ -63,6 +61,7 @@ def main(cfg: DictConfig) -> None:
     datamodule.setup()
     datamodule.setup_feature_extractor()
     logging.info(f"Instantiated datamodule: {datamodule.__class__.__name__}")
+    logging.info(f"Instantiated feature extractor: {datamodule.feature_extractor.__class__.__name__}")
 
     # determine feature shape to instantiate net
     if "JTFS" in cfg.features._target_:
