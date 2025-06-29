@@ -1,18 +1,21 @@
-debug: False  # TODO: route logs to logs/debug if true
 seed: 13
 
 audio:
   sr: 44100  # target sample rate
   dur_samples: ${pow:2,15}
-
+  
+debug: True  # log_dir = 'logs/debug' if True
 project_dir: ${oc.env:HOME}/cosi
-log_dir: 
-  "${project_dir}/logs/${hydra:job.name}/\
-  ${hydra:runtime.choices.features}_\
-  ${hydra:runtime.choices.model}/\
-  ${get_basename:${hydra:runtime.choices.net}}/\
-  ${hydra:runtime.choices.datamodule}/\
-  ${now:%Y-%m-%d_%H-%M-%S}"
+log_path:
+  "${hydra:job.name}/\
+   ${hydra:runtime.choices.features}_\
+   ${hydra:runtime.choices.model}/\
+   ${get_basename:${hydra:runtime.choices.net}}/\
+   ${hydra:runtime.choices.datamodule}/\
+   ${now:%Y-%m-%d_%H-%M-%S}"
+log_dir:
+  "${project_dir}/logs/\
+  ${log_path:${log_path}, ${debug}}"
 checkpoints_dir: ${log_dir}/checkpoints
 outputs_dir: ${log_dir}/outputs
 

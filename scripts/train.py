@@ -16,6 +16,13 @@ OmegaConf.register_new_resolver('pow', lambda x,y: x**y)
 OmegaConf.register_new_resolver('as_tuple', lambda *args: tuple(args))
 OmegaConf.register_new_resolver('get_basename', lambda path: Path(path).stem)
 
+def log_path(log_path: str, debug: bool):
+    if debug:
+        return "debug"
+    return log_path
+
+OmegaConf.register_new_resolver('log_path', log_path)
+
 HYDRA_MAIN = {
     "version_base": "1.2",
     "config_path": "../config",
@@ -25,8 +32,8 @@ HYDRA_MAIN = {
 @hydra.main(**HYDRA_MAIN)
 def main(cfg: DictConfig) -> None:
     logging.basicConfig(level=logging.INFO,
-                        format='%(asctime)s - %(levelname)s - %(message)s',
-                        datefmt='%Y-%m-%d %H:%M:%S',)
+                        format="%(asctime)s - %(levelname)s - %(message)s",
+                        datefmt="%Y-%m-%d %H:%M:%S",)
 
     if cfg.seed:
         pl.seed_everything(cfg.seed, workers=True)
