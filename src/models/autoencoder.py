@@ -31,11 +31,8 @@ class AutoencoderModule(L.LightningModule):
         assert all(key in self.loss_weights for key in ["recon"]), \
             "Loss weights must include 'recon' key."
 
-        # TODO: Add metrics
-        # timbremetrics
-        # https://anonymous.4open.science/r/timbremetrics-504D/README.md
-
-        # viz plot callback - not a metric but definitely informative
+        self.embeddings = []
+        self.labels = []
 
     def forward(self, x):
         x_hat, z = self.net(x)
@@ -75,6 +72,29 @@ class AutoencoderModule(L.LightningModule):
         self.log_dict({f"val/{k}": v for k, v in losses.items()}, 
                       on_step=False, on_epoch=True, sync_dist=True)
         return {"loss": losses["total"], "z": z, "x_hat": x_hat, "labels": labels}
+    
+    def on_validation_batch_end(self, outputs, batch, batch_idx):
+        self.embeddings.append(outputs["z"])
+        self.labels.append(outputs["labels"])
+    
+    def on_validation_epoch_end(self):
+        aggregated_labels = {}  # aggregate labels across batches
+        for d in self.labels:
+            for name, arr in d.items():
+                if name not in aggregated_labels:
+                    aggregated_labels[name] = []
+                aggregated_labels[name].append(arr)
+
+        self.stacked_labels = {name: torch.hstack(arr).cpu().numpy() 
+                    for name, arr in aggregated_labels.items()}
+
+        self.stacked_embeddings = torch.vstack(self.embeddings).cpu().numpy()
+
+    def on_validation_end(self):
+        self.embeddings.clear()
+        self.labels.clear()
+        del self.stacked_embeddings
+        del self.stacked_labels
 
     def configure_optimizers(self):
         optimizer = self.optimizer(self.parameters())
