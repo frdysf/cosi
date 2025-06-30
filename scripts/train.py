@@ -5,6 +5,7 @@ import hydra
 from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 
+import wandb
 import logging
 from pathlib import Path
 
@@ -91,29 +92,22 @@ def main(cfg: DictConfig) -> None:
     logging.info(f"Instantiated model: {model.__class__.__name__}")
 
     # --- logger ---
-    logger = instantiate(cfg.logger)
-    logging.info(f"Instantiated logger: {logger.__class__.__name__}")
+    logger = pl.loggers.WandbLogger(
+        project=cfg.wandb.project,
+        name=cfg.wandb.run,
+        save_dir=cfg.wandb.save_dir,
+        config=OmegaConf.to_container(cfg, resolve=True, throw_on_missing=True),
+        log_model=True,
+    )
 
     # --- callbacks ---
     callbacks = instantiate(cfg.callbacks)
     logging.info(f"Instantiated callbacks: {[c.__class__.__name__ for c in callbacks]}")
 
-    # --- trainer ---
-    trainer = pl.Trainer(
-        deterministic=True,
-        accelerator="gpu",
-        devices=1,
-        min_epochs=1,
-        max_epochs=50,
-        precision="32-true",
-        callbacks=callbacks,
-        logger=logger,
-        profiler="simple",
-        fast_dev_run=4,  # True
-        # overfit_batches=1.0,
-        strategy="ddp",
-        default_root_dir=cfg.checkpoints_dir,
-    )
+    trainer = instantiate(cfg.trainer,
+                          logger=logger,
+                          callbacks=callbacks,
+                          )
 
     trainer.fit(
         model=model,
@@ -126,7 +120,6 @@ def main(cfg: DictConfig) -> None:
     #     datamodule=datamodule,
     #     ckpt_path=None,
     # )
-
 
 if __name__ == "__main__":
     main()
