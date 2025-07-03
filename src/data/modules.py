@@ -28,8 +28,8 @@ class AudioDataModule(L.LightningDataModule):
     '''
     def __init__(
         self, 
-        sample_rate: int,
-        target_rate: Optional[int] = None,
+        sr: int,
+        target_sr: Optional[int] = None,
         feature_extractor: Optional[AudioFeatureExtractor] = None,
     ):
         super().__init__()
@@ -37,7 +37,7 @@ class AudioDataModule(L.LightningDataModule):
         if feature_extractor is None:
             feature_extractor = Identity()  # pass audio through
             warn(
-                "feature_extractor is None. "
+                "feature_extractor in DataModule is None. "
                 "Using Identity() as feature extractor, "
                 "which passes audio through without processing."
             )
@@ -51,11 +51,11 @@ class AudioDataModule(L.LightningDataModule):
 
         self.feature_extractor = feature_extractor
 
-        if target_rate is None:
-            target_rate = sample_rate
-        self.sample_rate = sample_rate
-        self.target_rate = target_rate
-        self.resample = Resample(orig_freq=sample_rate, new_freq=target_rate)
+        if target_sr is None:
+            target_sr = sr
+        self.sr = sr
+        self.target_sr = target_sr
+        self.resample = Resample(orig_freq=sr, new_freq=target_sr)
 
         self.train_dataset = None
         self.val_dataset = None
@@ -87,6 +87,9 @@ class AudioDataModule(L.LightningDataModule):
 
         This method is called after setup().
         '''
+
+        # TODO: refactor with similar logic in net
+
         if self.feature_extractor.__class__.__name__ == "partial":
             if self.feature_extractor.func.__name__ == "JTFS":
                 # jtfs requires shape arg
@@ -99,10 +102,11 @@ class AudioDataModule(L.LightningDataModule):
                 )
 
         if self.feature_extractor is not Identity:
-            assert self.feature_extractor.device == torch.device("cuda"), \
-                "feature_extractor must be CUDA-enabled."
+            assert self.feature_extractor.device == torch.device("cpu"), \
+                "feature_extractor must run on CPU. To use on GPU, " \
+                "pass feature_extractor to net instead of datamodule."
 
-    def on_after_batch_transfer(self, batch, dataloader_idx):
+    def on_before_batch_transfer(self, batch, dataloader_idx):
         batch["audio"] = self.resample(batch["audio"])
         batch["features"] = self.feature_extractor(batch["audio"])
         return batch
@@ -111,21 +115,21 @@ class AudioDataModule(L.LightningDataModule):
 class OrchideaSOLDataModule(AudioDataModule):
     def __init__(
         self,
-        data_dir: str,
-        meta_csv: str,
+        data_path: str,
+        csv_path: str,
         batch_size: float = 4,
         num_workers: float = 4,
         transform: Optional[Sequence[Callable]] = None,
-        sample_rate: int = 44100,
-        target_rate: Optional[int] = None,
+        sr: int = 44100,
+        target_sr: Optional[int] = None,
         feature_extractor: Optional[AudioFeatureExtractor] = None,
     ):
-        super().__init__(sample_rate=sample_rate,
-                         target_rate=target_rate,
+        super().__init__(sr=sr,
+                         target_sr=target_sr,
                          feature_extractor=feature_extractor)
 
-        self.data_dir = data_dir
-        self.meta_csv = meta_csv
+        self.data_path = data_path
+        self.csv_path = csv_path
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.transform = transform
@@ -135,18 +139,18 @@ class OrchideaSOLDataModule(AudioDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if stage == 'fit' or stage is None:
-            self.train_dataset = OrchideaSOLDataset(data_dir=self.data_dir,
-                                            meta_csv=self.meta_csv,
+            self.train_dataset = OrchideaSOLDataset(data_path=self.data_path,
+                                            csv_path=self.csv_path,
                                             split='training',
                                             transform=self.transform)
         
-            self.val_dataset = OrchideaSOLDataset(data_dir=self.data_dir,
-                                            meta_csv=self.meta_csv,
+            self.val_dataset = OrchideaSOLDataset(data_path=self.data_path,
+                                            csv_path=self.csv_path,
                                             split='validation',
                                             transform=self.transform)
         if stage == 'test' or stage is None:
-            self.test_dataset = OrchideaSOLDataset(data_dir=self.data_dir,
-                                            meta_csv=self.meta_csv,
+            self.test_dataset = OrchideaSOLDataset(data_path=self.data_path,
+                                            csv_path=self.csv_path,
                                             split='test',
                                             transform=self.transform)
 
