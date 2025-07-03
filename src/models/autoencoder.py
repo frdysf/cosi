@@ -35,8 +35,8 @@ class AutoencoderModule(L.LightningModule):
         self.labels = []
 
     def forward(self, x):
-        x_hat, z = self.net(x)
-        return x_hat, z
+        x, x_hat, z = self.net(x)
+        return z
 
     def compute_loss(self, x, x_hat, z) -> Dict[str, torch.Tensor]:
         # standard reconstruction loss
@@ -57,7 +57,7 @@ class AutoencoderModule(L.LightningModule):
     def model_step(self, batch, batch_idx):
         x = batch["features"]
         labels = batch["labels"]
-        x_hat, z = self(x)
+        x, x_hat, z = self.net(x)
         losses = self.compute_loss(x, x_hat, z)
         return x, x_hat, z, labels, losses
 
@@ -78,17 +78,17 @@ class AutoencoderModule(L.LightningModule):
         self.labels.append(outputs["labels"])
     
     def on_validation_epoch_end(self):
-        aggregated_labels = {}  # aggregate labels across batches
+        aggregated_labels = {}  # gather labels from across batches
         for d in self.labels:
             for name, arr in d.items():
                 if name not in aggregated_labels:
                     aggregated_labels[name] = []
                 aggregated_labels[name].append(arr)
 
-        self.stacked_labels = {name: torch.hstack(arr).cpu().numpy() 
+        self.stacked_labels = {name: torch.hstack(arr).detach()
                     for name, arr in aggregated_labels.items()}
 
-        self.stacked_embeddings = torch.vstack(self.embeddings).cpu().numpy()
+        self.stacked_embeddings = torch.vstack(self.embeddings).detach()
 
     def on_validation_end(self):
         self.embeddings.clear()
