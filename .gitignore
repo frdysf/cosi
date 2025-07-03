@@ -6,6 +6,7 @@
 logs/
 outputs/
 wandb/
+**/debug.yaml
 zzz_recycle/
 
 src/losses
