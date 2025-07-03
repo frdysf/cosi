@@ -1,8 +1,10 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn import Identity
 
-from typing import Tuple
+from typing import Optional, Tuple
+from warnings import warn
 
 from .base import BaseAutoencoder
 
@@ -19,31 +21,57 @@ class ConvAutoencoder(BaseAutoencoder):
     def __init__(
         self,
         sr: int, 
-        feature_shape: Tuple[int, int, int, int],
+        input_shape: Tuple[int, ...],
         latent_dim: int,
         activation_fn: nn.Module = nn.ReLU(),
+        feature_extractor: Optional[nn.Module] = None,
     ):
         super().__init__()
         self.sr = sr
         self.latent_dim = latent_dim
+
+        # TODO: refactor with similar logic in datamodule
+
+        if feature_extractor is None:
+            feature_extractor = Identity()  # pass audio through
+            warn(
+                "feature_extractor in net is None. "
+                "Using Identity() as feature extractor, "
+                "which passes audio through without processing."
+            )
+        elif feature_extractor.__class__.__name__ == "partial":
+            if feature_extractor.func.__name__ == "JTFS":
+                # jtfs requires shape arg
+                feature_extractor = feature_extractor(shape=input_shape[-1])
+
+        if feature_extractor is not Identity:
+            assert feature_extractor.device == torch.device("cuda"), \
+                "feature_extractor must be CUDA-enabled. To use on CPU, " \
+                "pass feature_extractor to datamodule instead of net."
+
+        self.feature_extractor = feature_extractor
+
+        dummy_input = torch.zeros(input_shape)
+        feature_shape = self.feature_extractor(dummy_input).shape
+
         self.encoder = Encoder(feature_shape, latent_dim, activation_fn)
         self.decoder = Decoder(feature_shape, latent_dim, activation_fn)
 
 
 class Encoder(nn.Module):
     '''
-    :param input_shape: Shape of input.
+    :param feature_shape: Shape of input features.
     :param latent_dim: Latent dimension of the embedding space.
     :param activation_fn: Activation function.
     '''
     def __init__(
         self,
-        input_shape: Tuple[int, int, int, int],
+        feature_shape: Tuple[int, int, int, int],
         latent_dim: int,
         activation_fn: nn.Module = nn.ReLU(),
     ):
         super().__init__()
-        C, Npath, Nf, Nt = input_shape
+        C, Npath, Nf, Nt = feature_shape
 
         self.net = nn.Sequential(
                 nn.LayerNorm([Nf, Nt, Npath, C], 
@@ -65,6 +93,8 @@ class Encoder(nn.Module):
             )
 
     def forward(self, x):
+        if x.ndim == 4:  # missing batch dimension
+            x = x.unsqueeze(0)  # [1, Nf, Nt, Npath, C]
         x = x.permute(0, 3, 4, 2, 1)  # [B, C, Npath, Nf, Nt]
         return self.net(x)
 
