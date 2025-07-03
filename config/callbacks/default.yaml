@@ -13,10 +13,18 @@
 - _target_: callbacks.visualize.VisualizeLatents
   transform:
       _target_: sklearn.manifold.TSNE
-      n_components: ${visualize.n_components}
+      n_components: ${visualize_latents.n_components}
       random_state: ${seed}
-  n_components: ${visualize.n_components}
+  n_components: ${visualize_latents.n_components}
   show: False
   save_path: ${outputs_dir}
   fig_kw: {}
   ax_kw: {}
+
+- _target_: callbacks.eval.TimbreMetrics
+  sample_rate: ${audio.target_sr}
+  fixed_duration: ${div:${audio.dur_samples}, ${audio.target_sr}}
+  device: cuda
+  heatmap_kw:
+    imshow_kw: {}
+    text_kw: {}

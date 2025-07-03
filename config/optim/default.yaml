@@ -13,6 +13,6 @@ scheduler:
 
 scheduler_params:
   monitor: val/total
-  frequency: 1  # should be a multiple of "trainer.check_val_every_n_epoch"
+  frequency: ${trainer.check_val_every_n_epoch}
   strict: True
   name: "lr_scheduler"

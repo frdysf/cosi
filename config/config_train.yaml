@@ -1,12 +1,12 @@
 seed: 13
 
 audio:
-  sr: 44100  # target sample rate
+  target_sr: 44100
   dur_samples: ${pow:2,15}
   
 debug: True  # log_dir = 'logs/debug' if True
 project_dir: ${oc.env:HOME}/cosi
-log_path:
+log_dir_name:
   "${hydra:job.name}/\
    ${hydra:runtime.choices.features}_\
    ${hydra:runtime.choices.model}/\
@@ -15,7 +15,7 @@ log_path:
    ${now:%Y-%m-%d_%H-%M-%S}"
 log_dir:
   "${project_dir}/logs/\
-  ${log_path:${log_path}, ${debug}}"
+  ${log_dir:${log_dir_name}, ${debug}}"
 checkpoints_dir: ${log_dir}/checkpoints
 outputs_dir: ${log_dir}/outputs
 
@@ -29,20 +29,21 @@ hydra:
 wandb:
   save_dir: ${log_dir}
   project: cosi
-  run: pilot-viz
+  run: pilot-timbre
 
 trainer:
   _target_: lightning.pytorch.Trainer
   fast_dev_run: 4
-  deterministic: True
+  deterministic: warn
   accelerator: gpu
   devices: 1
-  min_epochs: 20
+  min_epochs: 10
   max_epochs: 50
-  check_val_every_n_epoch: 10
-  precision: 32-true
+  check_val_every_n_epoch: 1
+  precision: 16-mixed
   strategy: ddp
   default_root_dir: ${checkpoints_dir}
+  profiler: simple
 
 defaults:
   - features: jtfs
@@ -51,22 +52,22 @@ defaults:
   - net: autoencoder/conv
   - model: autoencoder
   - optim: default
-  - callbacks: default
+  - callbacks: debug # default
   - _self_
 
 features:
-  sr: ${audio.sr}
+  sr: ${audio.target_sr}
   device: cuda
 
 datamodule:
   batch_size: 32
-  num_workers: 8
+  num_workers: 6
   transform: ${transform}
   # sampler:
   # collate_fn:
 
 net:
-  sr: ${audio.sr}
+  sr: ${audio.target_sr}
 
 model:
   loss_fn:
@@ -74,5 +75,5 @@ model:
   loss_weights:
     recon: 1.0
 
-visualize:
-  n_components: 2
+visualize_latents:
+  n_components: 2s
