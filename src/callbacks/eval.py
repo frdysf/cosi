@@ -67,11 +67,10 @@ class TimbreMetrics(Callback):
             # TODO: not yet tested with multiple processes!!
             local_results = {}
             for results in gathered_results:
-                for dist, metrics in results.items():
+                for dist in results.keys():
                     if dist not in local_results:
                         local_results[dist] = {}
-                    for metric, value in metrics.items():
-                        if metric not in local_results[dist]:
-                            local_results[dist][metric] = value
+                     # add {'metric2': value2, 'metric5': value5, ...}
+                    local_results[dist].update(results[dist]) 
 
         self.visualize(trainer, local_results)
