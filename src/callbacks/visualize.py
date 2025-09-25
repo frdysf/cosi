@@ -31,6 +31,7 @@ class VisualizeLatents(Callback):
             show: bool,
             fig_kw: dict,
             ax_kw: dict,
+            # every_n_epoch: int = 1,  # TODO: implement, see utils/callbacks.py
         ):
         super().__init__()
         self.transform = transform
@@ -47,10 +48,12 @@ class VisualizeLatents(Callback):
         self.fig_kw = fig_kw
         self.ax_kw = ax_kw
 
+        # self.every_n_epoch = every_n_epoch
+
     @rank_zero_only
     def visualize(self, trainer, embeddings, labels):
         embeddings = embeddings.cpu().numpy()
-        labels = {name: arr.cpu().numpy() for name, arr in labels.items()}
+        labels = {key: arr.cpu().numpy() for key, arr in labels.items()}
 
         reduced_embeddings = viz.reduce_embeddings(
                 embeddings,
@@ -64,21 +67,21 @@ class VisualizeLatents(Callback):
             transform = str(self.transform)
         epoch = trainer.current_epoch
 
-        for name in labels.keys():
+        for key in labels.keys():
             fig = viz.plot_reduced_embeddings(
                 reduced_embeddings,
                 n_components=self.n_components,
-                labels=labels[name],
-                cmap=CMAP.get(name, None),
+                labels=labels[key],
+                cmap=CMAP.get(key, None),
                 show=self.show,
-                save_path=self.save_path/f"{transform}_epoch={epoch}_label={name}.png",
+                save_path=self.save_path/f"{transform}_epoch={epoch}_label={key}.png",
                 fig_kw=self.fig_kw,
                 ax_kw=self.ax_kw,
-                ax_title=f"label={name}, epoch={epoch}, transform={transform}",
+                ax_title=f"label={key}, epoch={epoch}, transform={transform}",
             )
 
             trainer.logger.experiment.log(
-                {f"latent/{name}": wandb.Image(fig)  # plotly begone
+                {f"latent/{key}": wandb.Image(fig)  # plotly begone
                     if isinstance(trainer.logger, WandbLogger) else fig,
                 "epoch": epoch},
             )
@@ -88,8 +91,7 @@ class VisualizeLatents(Callback):
         local_labels = pl_module.stacked_labels
 
         # gather embeddings and labels from all processes
-        if dist.is_initialized() and dist.get_world_size() > 1:
-            world_size = dist.get_world_size()
+        if dist.is_initialized() and (world_size := distr.get_world_size()) > 1:
             gathered_embeddings = [torch.zeros_like(local_embeddings) for _ in range(world_size)]
             gathered_labels = [None for _ in range(world_size)]
 
@@ -97,9 +99,9 @@ class VisualizeLatents(Callback):
             dist.gather_object(local_labels, gathered_labels)
 
             local_embeddings = torch.cat(gathered_embeddings, dim=0)
-            local_labels = {name: torch.cat([label[name] 
+            local_labels = {key: torch.cat([label[key] 
                        for label in gathered_labels])
-                         for name in gathered_labels[0].keys()}
+                         for key in gathered_labels[0].keys()}
 
         self.visualize(trainer, local_embeddings, local_labels)
 
@@ -108,4 +110,5 @@ class VisualizeLatents(Callback):
         # subfolders according to labels
         # (unique values for label=r'label=(.+)' in path)
         # TODO: create GIF from saved images in each subfolder
+        # TODO: log to wandb
         return

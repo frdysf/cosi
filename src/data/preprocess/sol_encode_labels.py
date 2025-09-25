@@ -1,6 +1,6 @@
 '''
 This script encodes labels for "instrument family" and "pitch" 
-in the OrchideaSOL metadata, then adds these encoded labels 
+in the SOLPMT metadata, then adds these encoded labels 
 to the metadata file.
 '''
 import pandas as pd
@@ -10,7 +10,7 @@ from pathlib import Path
 from utils.data import str2midi
 
 # TODO: to be honest, no need to overwrite the csv file. Just include as
-# method in OrchideaSOLDataset class and call during init. We can try this
+# method in SOLPMTDataset class and call during init. We can try this
 # out after redownloading the dataset from IRCAM wesbite.
 
 def main(path: str) -> None:

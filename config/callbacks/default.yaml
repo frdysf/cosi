@@ -7,21 +7,21 @@
   monitor: val/total
   mode: min
 
-# TODO: nest transform config?
-#   e.g. transform: tsne
-#   callbacks/transform/tsne.yaml
 - _target_: callbacks.visualize.VisualizeLatents
+  # every_n_epoch: 1
+  n_components: 2
   transform:
       _target_: sklearn.manifold.TSNE
-      n_components: ${visualize_latents.n_components}
+      n_components: ${n_components}
       random_state: ${seed}
-  n_components: ${visualize_latents.n_components}
   show: False
   save_path: ${outputs_dir}
   fig_kw: {}
   ax_kw: {}
 
+
 - _target_: callbacks.eval.TimbreMetrics
+  # every_n_epoch: 1
   sample_rate: ${audio.target_sr}
   fixed_duration: ${div:${audio.dur_samples}, ${audio.target_sr}}
   device: cuda

@@ -2,6 +2,7 @@ from lightning.pytorch.callbacks import Callback
 import viz
 
 from timbremetrics import TimbreMetric
+from collections import defaultdict
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -17,6 +18,7 @@ class TimbreMetrics(Callback):
                  fixed_duration: float,
                  device: str,
                  heatmap_kw: dict = {},
+                 # every_n_epoch: int = 1,  TODO: implement, see utils/callbacks.py
                  ):
         super().__init__()
         self.metric = TimbreMetric(sample_rate=sample_rate,
@@ -25,6 +27,8 @@ class TimbreMetrics(Callback):
         
         self.imshow_kw = heatmap_kw.get('imshow_kw', {})
         self.text_kw = heatmap_kw.get('text_kw', {})
+
+        # self.every_n_epoch = every_n_epoch
 
     @rank_zero_only
     def visualize(self, trainer, results):
@@ -59,18 +63,15 @@ class TimbreMetrics(Callback):
         local_results = self.metric(pl_module)
 
         # gather results from all processes
-        if distr.is_initialized() and distr.get_world_size() > 1:
-            world_size = distr.get_world_size()
+        if distr.is_initialized() and (world_size := distr.get_world_size()) > 1:
             gathered_results = [None for _ in range(world_size)]
             distr.gather_object(local_results, gathered_results)
 
             # TODO: not yet tested with multiple processes!!
-            local_results = {}
+            local_results = defaultdict(dict)
             for results in gathered_results:
                 for dist in results.keys():
-                    if dist not in local_results:
-                        local_results[dist] = {}
-                     # add {'metric2': value2, 'metric5': value5, ...}
+                     # insert {'metric2': value2, 'metric5': value5, ...}
                     local_results[dist].update(results[dist]) 
 
         self.visualize(trainer, local_results)

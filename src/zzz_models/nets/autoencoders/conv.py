@@ -44,11 +44,6 @@ class ConvAutoencoder(BaseAutoencoder):
                 # jtfs requires shape arg
                 feature_extractor = feature_extractor(shape=input_shape[-1])
 
-        if feature_extractor is not Identity:
-            assert feature_extractor.device == torch.device("cuda"), \
-                "feature_extractor must be CUDA-enabled. To use on CPU, " \
-                "pass feature_extractor to datamodule instead of net."
-
         self.feature_extractor = feature_extractor
 
         dummy_input = torch.zeros(input_shape)

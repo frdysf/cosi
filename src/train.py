@@ -7,9 +7,9 @@ from omegaconf import DictConfig, OmegaConf
 
 from pathlib import Path
 
-
 import os
 os.environ["HYDRA_FULL_ERROR"] = "1"  # DEBUG
+
 
 def log_dir(dir_name: str, debug: bool):
     assert isinstance(debug, bool)
@@ -31,6 +31,7 @@ HYDRA_MAIN = {
 
 @hydra.main(**HYDRA_MAIN)
 def main(cfg: DictConfig) -> None:
+    # TODO: back to logging instead of print lol
     if cfg.seed:
         pl.seed_everything(cfg.seed, workers=True)
 
@@ -109,11 +110,11 @@ def main(cfg: DictConfig) -> None:
                           callbacks=callbacks,
                           )
 
-    trainer.fit(
-        model=model,
-        datamodule=datamodule,
-        # ckpt_path="",
-    )
+    # trainer.fit(
+    #     model=model,
+    #     datamodule=datamodule,
+    #     # ckpt_path="",
+    # )
     
     # trainer.test(
     #     model=model,

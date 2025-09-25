@@ -7,7 +7,7 @@ import lightning as L
 from typing import Optional, Sequence, Callable
 from warnings import warn
 
-from .datasets import OrchideaSOLDataset
+from .datasets import SOLPMTDataset
 from features.base import AudioFeatureExtractor
 
 # TODO: import pytorch_mums, pytorch_nsynth and create data modules
@@ -30,26 +30,8 @@ class AudioDataModule(L.LightningDataModule):
         self, 
         sr: int,
         target_sr: Optional[int] = None,
-        feature_extractor: Optional[AudioFeatureExtractor] = None,
     ):
         super().__init__()
-
-        if feature_extractor is None:
-            feature_extractor = Identity()  # pass audio through
-            warn(
-                "feature_extractor in DataModule is None. "
-                "Using Identity() as feature extractor, "
-                "which passes audio through without processing."
-            )
-        
-        elif feature_extractor.__class__.__name__ == "partial":
-                warn(
-                    f"feature_extractor is a partial instantiation. "
-                        "After calling `setup()` as usual, complete setup "
-                        "by calling `setup_feature_extractor()`."
-                    )
-
-        self.feature_extractor = feature_extractor
 
         if target_sr is None:
             target_sr = sr
@@ -78,41 +60,9 @@ class AudioDataModule(L.LightningDataModule):
                                 "accessing resampled_audio_shape.")
         resampled_audio = self.resample(audio)
         return resampled_audio.shape
-                    
-    def setup_feature_extractor(self):
-        '''
-        Setup the feature extractor after the data module is initialized.
-        This is useful when the feature extractor requires additional parameters
-        that depend on the dataset, such as the shape of the resampled audio.
-
-        This method is called after setup().
-        '''
-
-        # TODO: refactor with similar logic in net
-
-        if self.feature_extractor.__class__.__name__ == "partial":
-            if self.feature_extractor.func.__name__ == "JTFS":
-                # jtfs requires shape arg
-                self.feature_extractor = self.feature_extractor(shape=self.resampled_audio_shape[-1])
-
-        else:
-            warn(
-                "feature_extractor is not a partial instantiation. "
-                "Ignorning call to setup_feature_extractor()."
-                )
-
-        if self.feature_extractor is not Identity:
-            assert self.feature_extractor.device == torch.device("cpu"), \
-                "feature_extractor must run on CPU. To use on GPU, " \
-                "pass feature_extractor to net instead of datamodule."
-
-    def on_before_batch_transfer(self, batch, dataloader_idx):
-        batch["audio"] = self.resample(batch["audio"])
-        batch["features"] = self.feature_extractor(batch["audio"])
-        return batch
 
 
-class OrchideaSOLDataModule(AudioDataModule):
+class SOLPMTDataModule(AudioDataModule):
     def __init__(
         self,
         data_path: str,
@@ -122,11 +72,9 @@ class OrchideaSOLDataModule(AudioDataModule):
         transform: Optional[Sequence[Callable]] = None,
         sr: int = 44100,
         target_sr: Optional[int] = None,
-        feature_extractor: Optional[AudioFeatureExtractor] = None,
     ):
         super().__init__(sr=sr,
-                         target_sr=target_sr,
-                         feature_extractor=feature_extractor)
+                         target_sr=target_sr)
 
         self.data_path = data_path
         self.csv_path = csv_path
@@ -139,17 +87,17 @@ class OrchideaSOLDataModule(AudioDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if stage == 'fit' or stage is None:
-            self.train_dataset = OrchideaSOLDataset(data_path=self.data_path,
+            self.train_dataset = SOLPMTDataset(data_path=self.data_path,
                                             csv_path=self.csv_path,
                                             split='training',
                                             transform=self.transform)
         
-            self.val_dataset = OrchideaSOLDataset(data_path=self.data_path,
+            self.val_dataset = SOLPMTDataset(data_path=self.data_path,
                                             csv_path=self.csv_path,
                                             split='validation',
                                             transform=self.transform)
         if stage == 'test' or stage is None:
-            self.test_dataset = OrchideaSOLDataset(data_path=self.data_path,
+            self.test_dataset = SOLPMTDataset(data_path=self.data_path,
                                             csv_path=self.csv_path,
                                             split='test',
                                             transform=self.transform)

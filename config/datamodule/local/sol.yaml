@@ -1,0 +1,3 @@
+_target_: data.modules.SOLPMTDataModule
+data_path: /Users/farida/fy105/datasets/SOL_0.9_HQ-PMT
+csv_path: /Users/farida/fy105/datasets/SOL_0.9_HQ-PMT/SOL-0.9HQ-PMT_meta.csv

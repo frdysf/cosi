@@ -1,13 +1,16 @@
 **/__pycache__/
 *.egg-info
-*.ipynb
+sandbox.ipynb
 *.code-workspace
 
-logs/
+./logs/
 outputs/
 wandb/
 **/debug.yaml
-zzz_recycle/
 
+deprecated/
 src/losses
-src/checkpoints
+
+# pixi environments
+.pixi/*
+!.pixi/config.toml

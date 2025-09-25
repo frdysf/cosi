@@ -57,7 +57,7 @@ class AutoencoderModule(L.LightningModule):
     def model_step(self, batch, batch_idx):
         x = batch["features"]
         labels = batch["labels"]
-        x, x_hat, z = self.net(x)
+        x, x_hat, z = self.net(x)  # feature_extractor may reside in net
         losses = self.compute_loss(x, x_hat, z)
         return x, x_hat, z, labels, losses
 
@@ -80,13 +80,13 @@ class AutoencoderModule(L.LightningModule):
     def on_validation_epoch_end(self):
         aggregated_labels = {}  # gather labels from across batches
         for d in self.labels:
-            for name, arr in d.items():
-                if name not in aggregated_labels:
-                    aggregated_labels[name] = []
-                aggregated_labels[name].append(arr)
+            for key, arr in d.items():
+                if key not in aggregated_labels:
+                    aggregated_labels[key] = []
+                aggregated_labels[key].append(arr)
 
-        self.stacked_labels = {name: torch.hstack(arr).detach()
-                    for name, arr in aggregated_labels.items()}
+        self.stacked_labels = {key: torch.hstack(arr).detach()
+                    for key, arr in aggregated_labels.items()}
 
         self.stacked_embeddings = torch.vstack(self.embeddings).detach()
 

@@ -3,9 +3,11 @@ seed: 13
 audio:
   target_sr: 44100
   dur_samples: ${pow:2,15}
-  
+
+# --- TODO: move to config/logs ---
+
 debug: True  # log_dir = 'logs/debug' if True
-project_dir: ${oc.env:HOME}/cosi
+project_dir: /files/cosi  # ${oc.env:HOME}/cosi
 log_dir_name:
   "${hydra:job.name}/\
    ${hydra:runtime.choices.features}_\
@@ -20,6 +22,8 @@ checkpoints_dir: ${log_dir}/checkpoints
 outputs_dir: ${log_dir}/outputs
 
 hydra:
+  searchpath:
+  - file:///workspace/files/cosi
   run:
     dir: ${log_dir}
   output_subdir: hydra
@@ -30,6 +34,8 @@ wandb:
   save_dir: ${log_dir}
   project: cosi
   run: pilot-timbre
+
+# ------
 
 trainer:
   _target_: lightning.pytorch.Trainer
@@ -42,17 +48,18 @@ trainer:
   check_val_every_n_epoch: 1
   precision: 16-mixed
   strategy: ddp
-  default_root_dir: ${checkpoints_dir}
+  default_root_dir: ${checkpoints_dir}  # TODO: change
   profiler: simple
 
 defaults:
   - features: jtfs
-  - datamodule: sol
+  - datamodule: local/sol
   - transform: default
   - net: autoencoder/conv
   - model: autoencoder
   - optim: default
   - callbacks: debug # default
+  # - logs: local/default
   - _self_
 
 features:
@@ -74,6 +81,3 @@ model:
     _target_: torch.nn.MSELoss
   loss_weights:
     recon: 1.0
-
-visualize_latents:
-  n_components: 2s

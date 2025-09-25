@@ -11,15 +11,13 @@ import torchaudio
 def uint8tensor(x: int) -> torch.Tensor:
     return torch.tensor(x, dtype=torch.uint8)  # 0 to 127
 
-class NewOrchideaSOLDataset(Dataset):
-    # TODO: implement for fresh OrchideaSOL download
-    # maybe look at Haokun's examples?
+class OrchideaSOLDataset(Dataset):
+    # TODO: placeholder, use Haokun's code
     pass
 
-class OrchideaSOLDataset(Dataset):
+class SOLPMTDataset(Dataset):
     '''
-    PyTorch Dataset class for the OrchideaSOL dataset.
-        https://forum.ircam.fr/projects/detail/orchideasol/
+    PyTorch Dataset class for the SOL-PMT dataset.
 
     The metadata CSV file is assumed to have been
     preprocessed with preprocess/sol_encode_labels.py.
@@ -34,10 +32,6 @@ class OrchideaSOLDataset(Dataset):
     :returns label_instrument_family: Tensor of shape (1,) containing the instrument family label.
     :returns label_pitch: Tensor of shape (1,) containing the MIDI pitch label.
     '''
-    def _encode_labels(self):
-        # TODO: reimplement preprocess/sol_encode_labels.py here
-        pass
-
     def __init__(
         self, 
         data_path: str, 
@@ -65,7 +59,7 @@ class OrchideaSOLDataset(Dataset):
         audio_path = Path(self.data_path) / Path(self.data.iloc[idx]['file_name'])
         audio, sr = torchaudio.load(audio_path)
 
-        if self.transform:
+        if self.transform is not None:
             for transform in self.transform:
                 audio = transform(audio)
 
@@ -78,6 +72,6 @@ class OrchideaSOLDataset(Dataset):
             "labels": {
                 "modulation": label_modulation,
                 "instrument_family": label_instrument_family,
-                "pitch": label_pitch
+                "pitch": label_pitch,
             }
         }
