@@ -2,7 +2,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from typing import Sequence, Optional, Callable
+from typing import Sequence, Optional, Callable, Union
+from utils.models import get_activation_fn
 
 Activation = Callable[..., nn.Module]
 
@@ -11,7 +12,7 @@ class SharedLocalEncoder(nn.Module):
                  conv_channels: Sequence[int], 
                  fc_dims: Sequence[int], 
                  output_dim: int,
-                 output_activation: Optional[Activation] = None,
+                 output_activation: Optional[Union[Activation, str]] = None,
                  use_batch_norm: bool = False,
         ):
         """
@@ -53,7 +54,9 @@ class SharedLocalEncoder(nn.Module):
             fc_layers.append(nn.BatchNorm1d(output_dim))
 
         if output_activation:
-            fc_layers.append(output_activation)
+            if isinstance(output_activation, str):
+                output_activation = get_activation_fn(output_activation)
+            fc_layers.append(output_activation())
 
         self.fcs = nn.Sequential(*fc_layers)
 
