@@ -1,5 +1,5 @@
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 
 from typing import Optional, Sequence, Callable, Tuple
@@ -10,10 +10,6 @@ import torchaudio
     
 def uint8tensor(x: int) -> torch.Tensor:
     return torch.tensor(x, dtype=torch.uint8)  # 0 to 127
-
-class OrchideaSOLDataset(Dataset):
-    # TODO: placeholder, use Haokun's code
-    pass
 
 class SOLPMTDataset(Dataset):
     '''
@@ -34,38 +30,38 @@ class SOLPMTDataset(Dataset):
     '''
     def __init__(
         self, 
-        data_path: str, 
-        csv_path: str, 
+        data_dir: str, 
+        data_csv: str, 
         split: Optional[str], 
-        transform: Optional[Sequence[Callable]] = None
+        transform: Optional[Sequence[Callable]] = None,
     ):
         super().__init__()
 
-        self.data_path = data_path
+        self.data_dir = data_dir
 
-        self.data = pd.read_csv(Path(csv_path), dtype={"midi_pitch": "UInt8"})
-        self.data.dropna(subset=['midi_pitch'], inplace=True)
+        self.df = pd.read_csv(Path(data_csv), dtype={"midi_pitch": "UInt8"})
+        self.df.dropna(subset=['midi_pitch'], inplace=True)
 
         if split:
             assert split in ['training', 'test', 'validation']
-            self.data = self.data[self.data['subset'] == split]
+            self.df = self.df[self.df['subset'] == split]
 
         self.transform = transform
 
     def __len__(self) -> int:
-        return len(self.data)
+        return len(self.df)
 
     def __getitem__(self, idx: int) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor]:
-        audio_path = Path(self.data_path) / Path(self.data.iloc[idx]['file_name'])
+        audio_path = Path(self.data_dir) / Path(self.df.iloc[idx]['file_name'])
         audio, sr = torchaudio.load(audio_path)
 
         if self.transform is not None:
             for transform in self.transform:
                 audio = transform(audio)
 
-        label_modulation = uint8tensor(self.data.iloc[idx].label_modulation)
-        label_instrument_family = uint8tensor(self.data.iloc[idx].label_instrument_family)
-        label_pitch = uint8tensor(self.data.iloc[idx].midi_pitch)
+        label_modulation = uint8tensor(self.df.iloc[idx].label_modulation)
+        label_instrument_family = uint8tensor(self.df.iloc[idx].label_instrument_family)
+        label_pitch = uint8tensor(self.df.iloc[idx].midi_pitch)
 
         return {
             "audio": audio,

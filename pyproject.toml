@@ -9,7 +9,7 @@ description = ""
 authors = [
     { name="Farida Yusuf", email="f.yusuf@qmul.ac.uk" }
 ]
-dependencies = ["scattering-tools @ git+https://github.com/frdysf/ismir23-kymatio-tools.git"]
+dependencies = [ "label-metric @ git+https://github.com/frdysf/label-metric.git"]
 
 [project.urls]
 # TODO: add URLs (e.g. GitHub, research page, prperint/publication)
@@ -34,3 +34,4 @@ install-kernel = "python -m ipykernel install --user --name cosi --display-name 
 python = "3.11.*"
 ipykernel = ">=6.30.1,<7"
 pip = ">=25.2,<26"
+umap-learn = ">=0.5.9.post2,<0.6"

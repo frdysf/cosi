@@ -1,0 +1,13 @@
+# TODO: backbone and model
+
+_target_: models.supervised.classifier.SupervisedClassifier
+backbone:
+  _target_: models.nets.sle.SharedLocalEncoder
+  conv_channels:
+  fc_dims:
+  output_dim:
+  output_activation:
+  use_batchnorm: True
+  pooling: flatten
+num_classes: ??
+target_label: ??

@@ -6,6 +6,7 @@ from hydra.utils import instantiate
 from omegaconf import DictConfig, OmegaConf
 
 from pathlib import Path
+import logging
 
 import os
 os.environ["HYDRA_FULL_ERROR"] = "1"  # DEBUG
@@ -31,23 +32,25 @@ HYDRA_MAIN = {
 
 @hydra.main(**HYDRA_MAIN)
 def main(cfg: DictConfig) -> None:
-    # TODO: back to logging instead of print lol
+    logger = logging.getLogger(__name__)
+    logging.basicConfig(level=logging.INFO, format="[train] %(asctime)s - %(levelname)s - %(message)s")
+
     if cfg.seed:
         pl.seed_everything(cfg.seed, workers=True)
 
     device = cfg.features.device
     if device == "cuda":
         assert torch.cuda.is_available()
-    print(f"[train] Set to extract features on device: {device}")
+    logger.info(f"Set to extract features on device: {device}")
 
-    print("[train] Building the training pipeline...")
+    logger.info("Building the training pipeline...")
 
     # --- features ---
     feature_extractor = instantiate(cfg.features)
     
     # --- transform ---
     transform = instantiate(cfg.transform)
-    print(f"[train] Instantiated transforms: {[t.__class__.__name__ for t in transform]}")
+    logger.info(f"Instantiated transforms: {[t.__class__.__name__ for t in transform]}")
 
     # --- datamodule ---
     datamodule = instantiate(cfg.datamodule,
@@ -56,41 +59,25 @@ def main(cfg: DictConfig) -> None:
                              feature_extractor=feature_extractor if device == "cpu" else None,
                              )
     datamodule.setup()
-    # datamodule.setup_feature_extractor()
-    print(f"[train] Instantiated datamodule: {datamodule.__class__.__name__}")
-    print(f"[train] Set to resample audio to {cfg.audio.target_sr} Hz. Resampled audio shape: {datamodule.resampled_audio_shape}")
+    datamodule.setup_feature_extractor()
+    logger.info(f"Instantiated datamodule: {datamodule.__class__.__name__}")
+    logger.info(f"Set to resample audio to {cfg.audio.target_sr} Hz. Resampled audio shape: {datamodule.resampled_audio_shape}")
 
-    # # determine input shape to instantiate net if using datamodule.feature_extractor
-    # if "JTFS" in cfg.features._target_:
-    #     dummy_feature_extractor = instantiate(cfg.features)(
-    #                                       shape=datamodule.resampled_audio_shape[-1],
-    #                                       device="cpu",)
-    # else:
-    #     dummy_feature_extractor = instantiate(cfg.features)(device="cpu")
-    # resampled_audio = datamodule.resample(audio)
-    # feature_shape = dummy_feature_extractor(resampled_audio).shape   
-    
-    # determine input shape to instantiate net if not using datamodule.feature_extractor
-    audio = datamodule.train_dataset[1]["audio"]
-    input_shape = datamodule.resampled_audio_shape
-
-    # --- net ---
-    net = instantiate(cfg.net,
-                      input_shape=input_shape,
-                      feature_extractor=feature_extractor if device == "cuda" else None,
-                      )
-    print(f"[train] Instantiated net: {net.__class__.__name__}")
-    print(f"[train] Instantiated feature extractor (inside net): {net.feature_extractor.__class__.__name__}")
-
-    del audio, input_shape
+    # --- backbone ---
+    backbone = instantiate(cfg.backbone)
+    logger.info(f"Instantiated backbone: {backbone.__class__.__name__}")
 
     # --- model ---
     model = instantiate(cfg.model,
-                            net=net,
+                            backbone=backbone,
                             optimizer=instantiate(cfg.optim.optimizer),
                             lr_scheduler=instantiate(cfg.optim.scheduler),
-                            lr_scheduler_params=cfg.optim.scheduler_params,)
-    print(f"[train] Instantiated model: {model.__class__.__name__}")
+                            lr_scheduler_params=cfg.optim.scheduler_params,
+                            feature_extractor=feature_extractor if device == "cuda" else None,
+                            audio_shape=datamodule.resampled_audio_shape if device == "cuda" else None,
+                            )
+    logger.info(f"Instantiated model: {model.__class__.__name__}")
+    logger.info(f"Instantiated feature extractor (inside model): {model.feature_extractor.__class__.__name__}")
 
     # --- logger ---
     logger = pl.loggers.WandbLogger(
@@ -103,18 +90,18 @@ def main(cfg: DictConfig) -> None:
 
     # --- callbacks ---
     callbacks = instantiate(cfg.callbacks)
-    print(f"[train] Instantiated callbacks: {[c.__class__.__name__ for c in callbacks]}")
+    logger.info(f"Instantiated callbacks: {[c.__class__.__name__ for c in callbacks]}")
 
     trainer = instantiate(cfg.trainer,
                           logger=logger,
                           callbacks=callbacks,
                           )
 
-    # trainer.fit(
-    #     model=model,
-    #     datamodule=datamodule,
-    #     # ckpt_path="",
-    # )
+    trainer.fit(
+        model=model,
+        datamodule=datamodule,
+        # ckpt_path="",
+    )
     
     # trainer.test(
     #     model=model,

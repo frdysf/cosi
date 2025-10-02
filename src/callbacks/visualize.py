@@ -31,7 +31,7 @@ class VisualizeLatents(Callback):
             show: bool,
             fig_kw: dict,
             ax_kw: dict,
-            # every_n_epoch: int = 1,  # TODO: implement, see utils/callbacks.py
+            every_n_epoch: int = 1,
         ):
         super().__init__()
         self.transform = transform
@@ -48,7 +48,7 @@ class VisualizeLatents(Callback):
         self.fig_kw = fig_kw
         self.ax_kw = ax_kw
 
-        # self.every_n_epoch = every_n_epoch
+        self.every_n_epoch = every_n_epoch
 
     @rank_zero_only
     def visualize(self, trainer, embeddings, labels):
@@ -87,6 +87,9 @@ class VisualizeLatents(Callback):
             )
 
     def on_validation_end(self, trainer, pl_module):
+        if (trainer.current_epoch + 1) % self.every_n_epoch != 0:
+            return
+
         local_embeddings = pl_module.stacked_embeddings
         local_labels = pl_module.stacked_labels
 

@@ -7,12 +7,11 @@ audio:
 # --- TODO: move to config/logs ---
 
 debug: True  # log_dir = 'logs/debug' if True
-project_dir: /files/cosi  # ${oc.env:HOME}/cosi
+project_dir: Users/farida/fy105/cosi
 log_dir_name:
   "${hydra:job.name}/\
    ${hydra:runtime.choices.features}_\
    ${hydra:runtime.choices.model}/\
-   ${get_basename:${hydra:runtime.choices.net}}/\
    ${hydra:runtime.choices.datamodule}/\
    ${now:%Y-%m-%d_%H-%M-%S}"
 log_dir:
@@ -22,8 +21,8 @@ checkpoints_dir: ${log_dir}/checkpoints
 outputs_dir: ${log_dir}/outputs
 
 hydra:
-  searchpath:
-  - file:///workspace/files/cosi
+  # searchpath:  # for train_kubeflow.ipynb
+  # - file:///workspace/files/cosi
   run:
     dir: ${log_dir}
   output_subdir: hydra
@@ -33,13 +32,13 @@ hydra:
 wandb:
   save_dir: ${log_dir}
   project: cosi
-  run: pilot-timbre
+  run: relaunch
 
 # ------
 
 trainer:
   _target_: lightning.pytorch.Trainer
-  fast_dev_run: 4
+  fast_dev_run: True
   deterministic: warn
   accelerator: gpu
   devices: 1
@@ -53,13 +52,11 @@ trainer:
 
 defaults:
   - features: jtfs
-  - datamodule: local/sol
+  - datamodule: sol_pmt
   - transform: default
-  - net: autoencoder/conv
-  - model: autoencoder
+  - model: supervised_sle_classifier
   - optim: default
-  - callbacks: debug # default
-  # - logs: local/default
+  - callbacks: default
   - _self_
 
 features:
@@ -72,12 +69,3 @@ datamodule:
   transform: ${transform}
   # sampler:
   # collate_fn:
-
-net:
-  sr: ${audio.target_sr}
-
-model:
-  loss_fn:
-    _target_: torch.nn.MSELoss
-  loss_weights:
-    recon: 1.0

@@ -8,7 +8,7 @@
   mode: min
 
 - _target_: callbacks.visualize.VisualizeLatents
-  # every_n_epoch: 1
+  every_n_epoch: 5
   n_components: 2
   transform:
       _target_: sklearn.manifold.TSNE
@@ -21,7 +21,7 @@
 
 
 - _target_: callbacks.eval.TimbreMetrics
-  # every_n_epoch: 1
+  every_n_epoch: 5
   sample_rate: ${audio.target_sr}
   fixed_duration: ${div:${audio.dur_samples}, ${audio.target_sr}}
   device: cuda

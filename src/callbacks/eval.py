@@ -18,7 +18,7 @@ class TimbreMetrics(Callback):
                  fixed_duration: float,
                  device: str,
                  heatmap_kw: dict = {},
-                 # every_n_epoch: int = 1,  TODO: implement, see utils/callbacks.py
+                 every_n_epoch: int = 1,
                  ):
         super().__init__()
         self.metric = TimbreMetric(sample_rate=sample_rate,
@@ -28,7 +28,7 @@ class TimbreMetrics(Callback):
         self.imshow_kw = heatmap_kw.get('imshow_kw', {})
         self.text_kw = heatmap_kw.get('text_kw', {})
 
-        # self.every_n_epoch = every_n_epoch
+        self.every_n_epoch = every_n_epoch
 
     @rank_zero_only
     def visualize(self, trainer, results):
@@ -60,6 +60,9 @@ class TimbreMetrics(Callback):
         plt.close(fig)
 
     def on_validation_end(self, trainer, pl_module):
+        if (trainer.current_epoch + 1) % self.every_n_epoch != 0:
+            return
+
         local_results = self.metric(pl_module)
 
         # gather results from all processes
@@ -67,7 +70,6 @@ class TimbreMetrics(Callback):
             gathered_results = [None for _ in range(world_size)]
             distr.gather_object(local_results, gathered_results)
 
-            # TODO: not yet tested with multiple processes!!
             local_results = defaultdict(dict)
             for results in gathered_results:
                 for dist in results.keys():

@@ -1,6 +1,7 @@
 **/__pycache__/
 *.egg-info
 sandbox.ipynb
+sandbox_2.ipynb
 *.code-workspace
 
 ./logs/
