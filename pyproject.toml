@@ -1,7 +1,3 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
 name = "cosi"
 version = "0.1.0"
@@ -9,17 +5,15 @@ description = ""
 authors = [
     { name="Farida Yusuf", email="f.yusuf@qmul.ac.uk" }
 ]
-dependencies = [ "label-metric @ git+https://github.com/frdysf/label-metric.git", "viz @ git+https://github.com/frdysf/viz.git"]
+dependencies = ["viz @ git+https://github.com/frdysf/viz.git"]
 
 [project.urls]
-# TODO: add URLs (e.g. GitHub, research page, prperint/publication)
 
 [project.scripts]
-train = "cosi.cli:train"
-eval = "cosi.cli:eval"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
 [tool.pixi.workspace]
 channels = ["conda-forge"]
 platforms = ["osx-arm64"]
@@ -31,7 +25,11 @@ cosi = { path = ".", editable = true }
 install-kernel = "python -m ipykernel install --user --name cosi --display-name cosi"
 
 [tool.pixi.dependencies]
+# Start with minimal Python version; add packages manually with pixi add
 python = "3.11.*"
-ipykernel = ">=6.30.1,<7"
-pip = ">=25.2,<26"
-umap-learn = ">=0.5.9.post2,<0.6"
+pytorch = ">=2.7.1,<3"
+lightning = ">=2.5.5,<3"
+torchaudio = ">=2.8.0,<3"
+torchmetrics = ">=1.8.2,<2"
+hydra-core = ">=1.3.2,<2"
+omegaconf = ">=2.3.0,<3"
