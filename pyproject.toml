@@ -9,7 +9,7 @@ description = ""
 authors = [
     { name="Farida Yusuf", email="f.yusuf@qmul.ac.uk" }
 ]
-dependencies = [ "label-metric @ git+https://github.com/frdysf/label-metric.git"]
+dependencies = [ "label-metric @ git+https://github.com/frdysf/label-metric.git", "viz @ git+https://github.com/frdysf/viz.git"]
 
 [project.urls]
 # TODO: add URLs (e.g. GitHub, research page, prperint/publication)
