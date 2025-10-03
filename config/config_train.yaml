@@ -7,7 +7,7 @@ audio:
 # --- TODO: move to config/logs ---
 
 debug: True  # log_dir = 'logs/debug' if True
-project_dir: Users/farida/fy105/cosi
+project_dir: /Users/farida/fy105/cosi
 log_dir_name:
   "${hydra:job.name}/\
    ${hydra:runtime.choices.features}_\

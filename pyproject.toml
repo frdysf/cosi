@@ -25,7 +25,6 @@ cosi = { path = ".", editable = true }
 install-kernel = "python -m ipykernel install --user --name cosi --display-name cosi"
 
 [tool.pixi.dependencies]
-# Start with minimal Python version; add packages manually with pixi add
 python = "3.11.*"
 pytorch = ">=2.7.1,<3"
 lightning = ">=2.5.5,<3"
