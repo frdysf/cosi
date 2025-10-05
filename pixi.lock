@@ -164,7 +164,9 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/18/d6/ba863a4171ac9d7314c4d3fc251f015704a2caeee41ced89f321c049ed83/scikit_learn-1.7.2-cp311-cp311-macosx_12_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/85/ab/5c2eba89b9416961a982346a4d6a647d78c91ec96ab94ed522b3b6baf444/scipy-1.16.2-cp311-cp311-macosx_12_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/b7/ce/149a00dd41f10bc29e5921b496af8b574d8413afcd5e30dfa0ed46c2cc5e/six-1.17.0-py2.py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/a0/e5/58fd1a8d7b26fc113af244f966ee3aecf03cb9293cb935daaddc1e455e18/soundfile-0.13.1-py2.py3-none-macosx_11_0_arm64.whl
       - pypi: https://files.pythonhosted.org/packages/32/d5/f9a850d79b0851d1d4ef6456097579a9005b31fea68726a4ae5f2d82ddd9/threadpoolctl-3.6.0-py3-none-any.whl
+      - pypi: git+https://github.com/tiianhk/timbremetrics.git#c611b3a6a41872e5037a9e14099d15a70407c124
       - pypi: https://files.pythonhosted.org/packages/4b/46/08ab68936625400fe690684428d4db4764f49b406782cc133df1d0299d06/umap-0.1.1.tar.gz
       - pypi: git+https://github.com/frdysf/viz.git#3192fc8933ea61293c3314e09195d8989e8ca522
       - pypi: ./
@@ -322,9 +324,10 @@ packages:
 - pypi: ./
   name: cosi
   version: 0.1.0
-  sha256: 8f670cac54569b36e268b5f330f0cba28ebc70aa393d1c5f56c696ce075f9517
+  sha256: 060437a5f5d3a317e79771786af6799e1f371e13b03a2a474777f02adc65148b
   requires_dist:
   - viz @ git+https://github.com/frdysf/viz.git
+  - timbremetrics @ git+https://github.com/tiianhk/timbremetrics.git
   editable: true
 - conda: https://conda.anaconda.org/conda-forge/noarch/cpython-3.11.13-py311hd8ed1ab_0.conda
   noarch: generic
@@ -2167,6 +2170,13 @@ packages:
   purls: []
   size: 38824
   timestamp: 1753083462800
+- pypi: https://files.pythonhosted.org/packages/a0/e5/58fd1a8d7b26fc113af244f966ee3aecf03cb9293cb935daaddc1e455e18/soundfile-0.13.1-py2.py3-none-macosx_11_0_arm64.whl
+  name: soundfile
+  version: 0.13.1
+  sha256: 743f12c12c4054921e15736c6be09ac26b3b3d603aef6fd69f9dde68748f2593
+  requires_dist:
+  - cffi>=1.0
+  - numpy
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/svt-av1-3.1.2-h12ba402_0.conda
   sha256: 3b0f4f2a6697f0cdbbe0c0b5f5c7fa8064483d58b4d9674d5babda7f7146af7a
   md5: cb56c114b25f20bd09ef1c66a21136ff
@@ -2210,6 +2220,24 @@ packages:
   version: 3.6.0
   sha256: 43a0b8fd5a2928500110039e43a5eed8480b918967083ea48dc3ab9f13c4a7fb
   requires_python: '>=3.9'
+- pypi: git+https://github.com/tiianhk/timbremetrics.git#c611b3a6a41872e5037a9e14099d15a70407c124
+  name: timbremetrics
+  version: 0.0.0
+  requires_dist:
+  - soundfile
+  - numpy
+  - torch
+  - torchaudio
+  - torchmetrics
+  - pyyaml
+  - scipy
+  - black ; extra == 'dev'
+  - fadtk==1.0.1 ; extra == 'extra'
+  - cdpam ; extra == 'extra'
+  - descript-audio-codec==1.0.0 ; extra == 'extra'
+  - kymatio @ git+https://github.com/kymatio/kymatio.git@2e190d92a19ce274988590c834e978063cb0c490 ; extra == 'extra'
+  - music2latent ; extra == 'extra'
+  - seaborn ; extra == 'extra'
 - conda: https://conda.anaconda.org/conda-forge/osx-arm64/tk-8.6.13-h892fb3f_2.conda
   sha256: cb86c522576fa95c6db4c878849af0bccfd3264daf0cc40dd18e7f4a7bfced0e
   md5: 7362396c170252e7b7b0c8fb37fe9c78

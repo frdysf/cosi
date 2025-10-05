@@ -5,7 +5,7 @@ description = ""
 authors = [
     { name="Farida Yusuf", email="f.yusuf@qmul.ac.uk" }
 ]
-dependencies = ["viz @ git+https://github.com/frdysf/viz.git"]
+dependencies = ["viz @ git+https://github.com/frdysf/viz.git", "timbremetrics @ git+https://github.com/tiianhk/timbremetrics.git"]
 
 [project.urls]
 
