@@ -7,7 +7,7 @@ audio:
 # --- TODO: move to config/logs ---
 
 debug: True  # log_dir = 'logs/debug' if True
-project_dir: /Users/farida/fy105/cosi
+project_dir: /data/home/acw745/cosi
 log_dir_name:
   "${hydra:job.name}/\
    ${hydra:runtime.choices.features}_\
@@ -15,7 +15,7 @@ log_dir_name:
    ${hydra:runtime.choices.datamodule}/\
    ${now:%Y-%m-%d_%H-%M-%S}"
 log_dir:
-  "${project_dir}/logs/\
+  "/data/scratch/acw745/${project_dir}/logs/\
   ${log_dir:${log_dir_name}, ${debug}}"
 checkpoints_dir: ${log_dir}/checkpoints
 outputs_dir: ${log_dir}/outputs
