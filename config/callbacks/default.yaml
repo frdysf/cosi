@@ -12,7 +12,7 @@
   n_components: 2
   transform:
       _target_: sklearn.manifold.TSNE
-      n_components: ${n_components}
+      n_components: 2
       random_state: ${seed}
   show: False
   save_path: ${outputs_dir}

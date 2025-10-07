@@ -1,13 +1,11 @@
-# TODO: backbone and model
-
 _target_: models.supervised.classifier.SupervisedClassifier
 backbone:
   _target_: models.nets.sle.SharedLocalEncoder
-  conv_channels:
-  fc_dims:
-  output_dim:
-  output_activation:
+  conv_channels: [1024, 1024, 1024]
+  fc_dims: [1524, 1524]
+  output_dim: 256
+  output_activation: relu
   use_batchnorm: True
   pooling: flatten
-num_classes: ??
-target_label: ??
+num_classes: 11  # 5 for modulation technique, 11 for instrument family
+target_label: instrument_family
