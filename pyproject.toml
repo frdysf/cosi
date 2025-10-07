@@ -5,7 +5,8 @@ description = ""
 authors = [
     { name="Farida Yusuf", email="f.yusuf@qmul.ac.uk" }
 ]
-dependencies = ["viz @ git+https://github.com/frdysf/viz.git", "timbremetrics @ git+https://github.com/tiianhk/timbremetrics.git"]
+requires-python = ">= 3.11, <3.13"
+dependencies = ["viz @ git+https://github.com/frdysf/viz.git", "timbremetrics @ git+https://github.com/tiianhk/timbremetrics.git", "kymatio @ git+https://github.com/kymatio/kymatio.git", "umap-learn>=0.5.9.post2,<0.6"]
 
 [project.urls]
 
@@ -14,21 +15,25 @@ dependencies = ["viz @ git+https://github.com/frdysf/viz.git", "timbremetrics @ 
 [tool.setuptools.packages.find]
 where = ["src"]
 
-[tool.pixi.workspace]
+[tool.pixi.project]
 channels = ["conda-forge"]
 platforms = ["osx-arm64", "linux-64"]
 
 [tool.pixi.pypi-dependencies]
 cosi = { path = ".", editable = true }
+torch = { version = ">=2.7.1, <3", index = "https://download.pytorch.org/whl/cu128" }
+torchvision = { version = ">=0.20.1", index = "https://download.pytorch.org/whl/cu128" }
+lightning = ">=2.5.5,<3"
+wandb = ">=0.12.10"
+
+[tool.pixi.target.osx.pypi-dependencies]
+torch = ">=2.7.1,<3"
+torchvision = ">=0.20.1"
 
 [tool.pixi.tasks]
 install-kernel = "python -m ipykernel install --user --name cosi --display-name cosi"
 
 [tool.pixi.dependencies]
-python = "3.11.*"
-pytorch = ">=2.7.1,<3"
-lightning = ">=2.5.5,<3"
-torchaudio = ">=2.8.0,<3"
-torchmetrics = ">=1.8.2,<2"
 hydra-core = ">=1.3.2,<2"
 omegaconf = ">=2.3.0,<3"
+pandas = ">=2.3.3,<3"
