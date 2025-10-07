@@ -7,7 +7,7 @@ import lightning as L
 from typing import Optional, Sequence, Callable
 from warnings import warn
 
-from datasets import SOLPMTDataset
+from .datasets import SOLPMTDataset
 from features.base import AudioFeatureExtractor
 
 # TODO: import pytorch_mums, pytorch_nsynth and create data modules
@@ -82,14 +82,15 @@ class AudioDataModule(L.LightningDataModule):
 
     def setup_feature_extractor(self):
         '''
-        Setup the feature extractor after the data module is initialized.
+        Always call this method after setup().
+
+        Sets up the feature extractor after the data module is initialized.
         This is useful when the feature extractor requires additional parameters
         that depend on the dataset, such as the shape of the resampled audio.
 
-        This method is called after setup().
+        Also checks that the feature extractor is set to run on CPU when passed
+        to the datamodule.
         '''
-
-        # TODO: refactor with similar logic in net
 
         if self.feature_extractor.__class__.__name__ == "partial":
             if self.feature_extractor.func.__name__ == "JTFS":
@@ -99,10 +100,10 @@ class AudioDataModule(L.LightningDataModule):
         else:
             print(
                 "feature_extractor is not a partial instantiation. "
-                "Ignorning call to setup_feature_extractor()."
+                "Finishing call to setup_feature_extractor()."
                 )
 
-        if self.feature_extractor.__repr__ != "Identity()":
+        if self.feature_extractor.__repr__() != "Identity()":
             assert self.feature_extractor.device == torch.device("cpu"), \
                 "feature_extractor must run on CPU. To use on GPU, " \
                 "pass feature_extractor to net instead of datamodule."
@@ -115,8 +116,8 @@ class AudioDataModule(L.LightningDataModule):
 class SOLPMTDataModule(AudioDataModule):
     def __init__(
         self,
-        data_path: str,
-        csv_path: str,
+        data_dir: str,
+        data_csv: str,
         batch_size: float = 4,
         num_workers: float = 4,
         transform: Optional[Sequence[Callable]] = None,
@@ -128,8 +129,8 @@ class SOLPMTDataModule(AudioDataModule):
                          target_sr=target_sr,
                          feature_extractor=feature_extractor)
 
-        self.data_path = data_path
-        self.csv_path = csv_path
+        self.data_dir = data_dir
+        self.data_csv = data_csv
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.transform = transform
@@ -139,18 +140,18 @@ class SOLPMTDataModule(AudioDataModule):
 
     def setup(self, stage: Optional[str] = None):
         if stage == 'fit' or stage is None:
-            self.train_dataset = SOLPMTDataset(data_dir=self.data_path,
-                                            data_csv=self.csv_path,
+            self.train_dataset = SOLPMTDataset(data_dir=self.data_dir,
+                                            data_csv=self.data_csv,
                                             split='training',
                                             transform=self.transform)
         
-            self.val_dataset = SOLPMTDataset(data_dir=self.data_path,
-                                            data_csv=self.csv_path,
+            self.val_dataset = SOLPMTDataset(data_dir=self.data_dir,
+                                            data_csv=self.data_csv,
                                             split='validation',
                                             transform=self.transform)
         if stage == 'test' or stage is None:
-            self.test_dataset = SOLPMTDataset(data_dir=self.data_path,
-                                            data_csv=self.csv_path,
+            self.test_dataset = SOLPMTDataset(data_dir=self.data_dir,
+                                            data_csv=self.data_csv,
                                             split='test',
                                             transform=self.transform)
 

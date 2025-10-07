@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from torch.nn import Identity
 import torch.nn.functional as F
 
 from features.base import AudioFeatureExtractor
@@ -22,8 +23,8 @@ class ScatteringFeatureExtractor(AudioFeatureExtractor):
             raise ValueError("time_avg=True not supported for scattering features. Use T parameter instead.")
         
         super().__init__(sr=sr, time_avg=time_avg, device=device)
+        self.transform = Identity()  # placeholder, replace in subclass
         self.log1p = log1p
-        self.to_device()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x = super().forward(x)
@@ -44,13 +45,18 @@ class Scat1D(ScatteringFeatureExtractor):
         shape: Optional[Union[int, Tuple[int]]] = None, 
         sr: int = 44100, 
         time_avg: bool = False,
+        log1p: bool = False,
         device: str = "cpu",
     ):  
-        super().__init__(sr=sr, time_avg=time_avg, device=device)
+        if time_avg:
+            raise ValueError("time_avg=True is redundant for scattering features. Use T parameter instead.")
+
+        super().__init__(sr=sr, time_avg=time_avg, log1p=log1p, device=device)
 
         self.transform = Scattering1D(
             shape=shape, T=T, Q=Q, J=J, stride=stride
         )
+        self.to_device()
     
 
 class JTFS(ScatteringFeatureExtractor):
@@ -69,10 +75,15 @@ class JTFS(ScatteringFeatureExtractor):
         format: str = "joint",
         sr: int = 44100, 
         time_avg: bool = False,
+        log1p: bool = False,
         device: str = "cpu",
     ):
-        super().__init__(sr=sr, time_avg=time_avg, device=device)
+        if time_avg:
+            raise ValueError("time_avg=True is redundant for scattering features. Use T parameter instead.")
+
+        super().__init__(sr=sr, time_avg=time_avg, log1p=log1p, device=device)
 
         self.transform = TimeFrequencyScattering(
             J=J, J_fr=J_fr, shape=shape, Q=Q, T=T, Q_fr=Q_fr, F=F, stride=stride, format=format
         )
+        self.to_device()

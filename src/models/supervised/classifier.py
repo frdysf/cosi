@@ -34,8 +34,6 @@ class SupervisedClassifier(L.LightningModule):
         super().__init__()
         self.save_hyperparameters(ignore=["backbone"])
 
-        # TODO: refactor with similar logic in datamodule
-
         if feature_extractor is None:
             feature_extractor = nn.Identity()  # pass audio through
             print(
@@ -50,10 +48,9 @@ class SupervisedClassifier(L.LightningModule):
                     assert audio_shape is not None, "audio_shape must be provided if feature_extractor is JTFS"
                     feature_extractor = feature_extractor(shape=audio_shape[-1])
 
-            if feature_extractor.__repr__ != "Identity()":
-                assert feature_extractor.device == torch.device("cuda"), \
-                    "feature_extractor must be CUDA-enabled. To use on CPU, " \
-                    "pass feature_extractor to datamodule instead of net."
+            assert feature_extractor.device == torch.device("cuda"), \
+                "feature_extractor must be CUDA-enabled. To use on CPU, " \
+                "pass feature_extractor to datamodule instead of net."
 
         self.feature_extractor = feature_extractor
         self.backbone = backbone

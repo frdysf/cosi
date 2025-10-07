@@ -32,7 +32,6 @@ HYDRA_MAIN = {
 
 @hydra.main(**HYDRA_MAIN)
 def main(cfg: DictConfig) -> None:
-    logger = logging.getLogger(__name__)
     logging.basicConfig(level=logging.INFO, format="[train] %(asctime)s - %(levelname)s - %(message)s")
 
     if cfg.seed:
@@ -41,16 +40,16 @@ def main(cfg: DictConfig) -> None:
     device = cfg.features.device
     if device == "cuda":
         assert torch.cuda.is_available()
-    logger.info(f"Set to extract features on device: {device}")
+    logging.info(f"Set to extract features on device: {device}")
 
-    logger.info("Building the training pipeline...")
+    logging.info("Building the training pipeline...")
 
     # --- features ---
     feature_extractor = instantiate(cfg.features)
     
     # --- transform ---
     transform = instantiate(cfg.transform)
-    logger.info(f"Instantiated transforms: {[t.__class__.__name__ for t in transform]}")
+    logging.info(f"Instantiated transforms: {[t.__class__.__name__ for t in transform]}")
 
     # --- datamodule ---
     datamodule = instantiate(cfg.datamodule,
@@ -60,24 +59,20 @@ def main(cfg: DictConfig) -> None:
                              )
     datamodule.setup()
     datamodule.setup_feature_extractor()
-    logger.info(f"Instantiated datamodule: {datamodule.__class__.__name__}")
-    logger.info(f"Set to resample audio to {cfg.audio.target_sr} Hz. Resampled audio shape: {datamodule.resampled_audio_shape}")
-
-    # --- backbone ---
-    backbone = instantiate(cfg.backbone)
-    logger.info(f"Instantiated backbone: {backbone.__class__.__name__}")
+    logging.info(f"Instantiated datamodule: {datamodule.__class__.__name__}")
+    logging.info(f"Set to resample audio to {cfg.audio.target_sr} Hz. Resampled audio shape: {datamodule.resampled_audio_shape}")
 
     # --- model ---
     model = instantiate(cfg.model,
-                            backbone=backbone,
                             optimizer=instantiate(cfg.optim.optimizer),
                             lr_scheduler=instantiate(cfg.optim.scheduler),
                             lr_scheduler_params=cfg.optim.scheduler_params,
                             feature_extractor=feature_extractor if device == "cuda" else None,
                             audio_shape=datamodule.resampled_audio_shape if device == "cuda" else None,
                             )
-    logger.info(f"Instantiated model: {model.__class__.__name__}")
-    logger.info(f"Instantiated feature extractor (inside model): {model.feature_extractor.__class__.__name__}")
+    logging.info(f"Instantiated model: {model.__class__.__name__}")
+    logging.info(f"Instantiated feature extractor (inside model): {model.feature_extractor.__class__.__name__}")
+    logging.info(f"Using backbone in model: {model.backbone.__class__.__name__}")
 
     # --- logger ---
     logger = pl.loggers.WandbLogger(
@@ -90,7 +85,7 @@ def main(cfg: DictConfig) -> None:
 
     # --- callbacks ---
     callbacks = instantiate(cfg.callbacks)
-    logger.info(f"Instantiated callbacks: {[c.__class__.__name__ for c in callbacks]}")
+    logging.info(f"Instantiated callbacks: {[c.__class__.__name__ for c in callbacks]}")
 
     trainer = instantiate(cfg.trainer,
                           logger=logger,
