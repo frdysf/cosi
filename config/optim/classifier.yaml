@@ -12,7 +12,7 @@ scheduler:
   patience: 10
 
 scheduler_params:
-  monitor: val/total
+  monitor: val/loss
   frequency: ${trainer.check_val_every_n_epoch}
   strict: True
   name: "lr_scheduler"

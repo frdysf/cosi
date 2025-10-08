@@ -55,7 +55,7 @@ defaults:
   - datamodule: sol_pmt
   - transform: default
   - model: supervised_sle_classifier
-  - optim: default
+  - optim: classifier
   - callbacks: default
   - _self_
 

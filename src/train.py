@@ -74,6 +74,15 @@ def main(cfg: DictConfig) -> None:
     logging.info(f"Instantiated feature extractor (inside model): {model.feature_extractor.__class__.__name__}")
     logging.info(f"Using backbone in model: {model.backbone.__class__.__name__}")
 
+    # --- run dummy forward pass for lazy modules ---
+    batch = next(iter(datamodule.train_dataloader()))
+    batch = datamodule.on_before_batch_transfer(batch, 0)
+    batch["features"] = batch["features"].cuda()
+    model = model.cuda()
+    model(batch["features"])
+    logging.info("Completed dummy forward pass through model.")
+    del batch
+
     # --- logger ---
     logger = pl.loggers.WandbLogger(
         project=cfg.wandb.project,

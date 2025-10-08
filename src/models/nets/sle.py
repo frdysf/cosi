@@ -65,7 +65,9 @@ class SharedLocalEncoder(nn.Module):
         self.fcs = nn.Sequential(*fc_layers)
 
     def forward(self, x):
-        x = self.convs(x)            # (B, C, H, W)
+        if x.dim() > 4:
+            x = x.squeeze()             # remove singleton channel dim for JTFS
+        x = self.convs(x)               # (B, C, H, W)
         if self.pooling == 'flatten':
             x = x.flatten(start_dim=1)  # flatten all but batch dim
         elif self.pooling == 'gap':

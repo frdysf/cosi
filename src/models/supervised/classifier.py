@@ -92,21 +92,21 @@ class SupervisedClassifier(L.LightningModule):
 
     def training_step(self, batch, batch_idx):
         x, logits, z, targets, labels, loss = self.model_step(batch, batch_idx)
-        self.log(f"train/loss/{self.target_label}", loss, prog_bar=True)
+        self.log(f"train/loss", loss, prog_bar=True)
         return {"loss": loss, "z": z, "labels": labels}
 
     def validation_step(self, batch, batch_idx):
         x, logits, z, targets, labels, loss = self.model_step(batch, batch_idx)
         acc = self.accuracy(logits, targets)
-        self.log(f"val/loss/{self.target_label}", loss, prog_bar=True)
-        self.log(f"val/acc/{self.target_label}", acc, prog_bar=True)
+        self.log(f"val/loss", loss, prog_bar=True)
+        self.log(f"val/acc", acc, prog_bar=True)
         return {"loss": loss, "z": z, "labels": labels}
 
     def test_step(self, batch, batch_idx):
         x, logits, z, targets, labels, loss = self.model_step(batch, batch_idx)
         acc = self.accuracy(logits, targets)
-        self.log(f"test/loss/{self.target_label}", loss, prog_bar=True)
-        self.log(f"test/acc/{self.target_label}", acc, prog_bar=True)
+        self.log(f"test/loss", loss, prog_bar=True)
+        self.log(f"test/acc", acc, prog_bar=True)
         return {"loss": loss, "z": z, "labels": labels}
 
     def on_validation_batch_end(self, outputs, batch, batch_idx):
